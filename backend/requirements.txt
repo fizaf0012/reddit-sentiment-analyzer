@@ -10,3 +10,7 @@ praw
 nltk
 vaderSentiment
 pandas
+email-validator
+python-multipart
+transformers
+torch

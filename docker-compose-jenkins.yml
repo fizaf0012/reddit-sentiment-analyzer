@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  database-jenkins:
+    image: postgres:15-alpine
+    container_name: reddit-sentiment-db-jenkins
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: fiza
+      POSTGRES_DB: reddit_analyzer
+    volumes:
+      - postgres_data_jenkins:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - app-network-jenkins
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-jenkins:
+    image: python:3.10-slim
+    container_name: reddit-sentiment-backend-jenkins
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:fiza@database-jenkins:5432/reddit_analyzer
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      database-jenkins:
+        condition: service_healthy
+    networks:
+      - app-network-jenkins
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend-jenkins:
+    image: node:16-alpine
+    container_name: reddit-sentiment-frontend-jenkins
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend-jenkins
+    networks:
+      - app-network-jenkins
+    command: >
+      sh -c "npm install && npm start"
+
+volumes:
+  postgres_data_jenkins:
+
+networks:
+  app-network-jenkins:
+    driver: bridge

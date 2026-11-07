@@ -207,4 +207,3 @@ Moved the application from Docker Compose to a **Kubernetes cluster** running on
 - Running a stateful application on Kubernetes with persistent storage, service networking, and autoscaling.
 - Deploying and operating Linux servers on AWS EC2.
 
-[⬅ Back to Portfolio](../../README.md)
